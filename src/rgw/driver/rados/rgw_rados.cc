@@ -2286,7 +2286,7 @@ void RGWRados::create_bucket_id(string *bucket_id)
 int RGWRados::create_bucket(const DoutPrefixProvider* dpp,
                             optional_yield y,
                             const rgw_bucket& bucket,
-                            const rgw_user& owner,
+                            const rgw_owner& owner,
                             const std::string& zonegroup_id,
                             const rgw_placement_rule& placement_rule,
                             const RGWZonePlacementInfo* zone_placement,
@@ -2840,6 +2840,7 @@ bool RGWRados::swift_versioning_enabled(const RGWBucketInfo& bucket_info) const
 
 int RGWRados::swift_versioning_copy(RGWObjectCtx& obj_ctx,
                                     const ACLOwner& owner,
+                                    const rgw_user& remote_user,
                                     RGWBucketInfo& bucket_info,
                                     const rgw_obj& obj,
                                     const DoutPrefixProvider *dpp,
@@ -2897,6 +2898,7 @@ int RGWRados::swift_versioning_copy(RGWObjectCtx& obj_ctx,
 
   r = copy_obj(obj_ctx,
                owner,
+               remote_user,
                NULL, /* req_info *info */
                no_zone,
                dest_obj,
@@ -2936,6 +2938,7 @@ int RGWRados::swift_versioning_copy(RGWObjectCtx& obj_ctx,
 
 int RGWRados::swift_versioning_restore(RGWObjectCtx& obj_ctx,
                                        const ACLOwner& owner,
+                                       const rgw_user& remote_user,
                                        RGWBucketInfo& bucket_info,
                                        rgw_obj& obj,
                                        bool& restored,
@@ -2994,6 +2997,7 @@ int RGWRados::swift_versioning_restore(RGWObjectCtx& obj_ctx,
 
     int ret = copy_obj(obj_ctx,
                        owner,
+                       remote_user,
                        nullptr,       /* req_info *info */
                        no_zone,
                        obj,           /* dest obj */
@@ -4581,6 +4585,7 @@ int RGWRados::copy_obj_to_remote_dest(const DoutPrefixProvider *dpp,
  */
 int RGWRados::copy_obj(RGWObjectCtx& obj_ctx,
                const ACLOwner& owner,
+               const rgw_user& remote_user,
                req_info *info,
                const rgw_zone_id& source_zone,
                const rgw_obj& dest_obj,
@@ -4639,7 +4644,7 @@ int RGWRados::copy_obj(RGWObjectCtx& obj_ctx,
   if (remote_src || !source_zone.empty()) {
     rgw_zone_set_entry source_trace_entry{source_zone.id, std::nullopt};
     const req_context rctx{dpp, y, nullptr};
-    return fetch_remote_obj(obj_ctx, owner.id, info, source_zone,
+    return fetch_remote_obj(obj_ctx, remote_user, info, source_zone,
                dest_obj, src_obj, dest_bucket_info, &src_bucket_info,
                dest_placement, src_mtime, mtime, mod_ptr,
                unmod_ptr, high_precision_time,
@@ -4716,7 +4721,7 @@ int RGWRados::copy_obj(RGWObjectCtx& obj_ctx,
 
   if (remote_dest) {
     /* dest is in a different zonegroup, copy it there */
-    return copy_obj_to_remote_dest(dpp, astate, attrs, read_op, owner.id, dest_obj, mtime, y);
+    return copy_obj_to_remote_dest(dpp, astate, attrs, read_op, remote_user, dest_obj, mtime, y);
   }
   uint64_t max_chunk_size;
 
@@ -5685,7 +5690,7 @@ int RGWRados::Object::Delete::delete_obj(optional_yield y, const DoutPrefixProvi
 
       struct rgw_bucket_dir_entry_meta meta;
 
-      meta.owner = params.obj_owner.id.to_str();
+      meta.owner = to_string(params.obj_owner.id);
       meta.owner_display_name = params.obj_owner.display_name;
 
       if (real_clock::is_zero(params.mtime)) {
@@ -6961,7 +6966,7 @@ int RGWRados::Bucket::UpdateIndex::complete(const DoutPrefixProvider *dpp, int64
   if (user_data)
     ent.meta.user_data = *user_data;
 
-  ent.meta.owner = owner.id.to_str();
+  ent.meta.owner = to_string(owner.id);
   ent.meta.owner_display_name = owner.display_name;
   ent.meta.content_type = content_type;
   ent.meta.appendable = appendable;
@@ -10206,7 +10211,7 @@ int RGWRados::check_disk_state(const DoutPrefixProvider *dpp,
   object.meta.etag = etag;
   object.meta.content_type = content_type;
   object.meta.storage_class = storage_class;
-  object.meta.owner = owner.id.to_str();
+  object.meta.owner = to_string(owner.id);
   object.meta.owner_display_name = owner.display_name;
   object.meta.appendable = appendable;
 
@@ -10236,7 +10241,7 @@ int RGWRados::check_disk_state(const DoutPrefixProvider *dpp,
     list_state.tag = astate->obj_tag.c_str();
   }
 
-  list_state.meta.owner = owner.id.to_str();
+  list_state.meta.owner = to_string(owner.id);
   list_state.meta.owner_display_name = owner.display_name;
 
   list_state.exists = true;
@@ -10360,7 +10365,7 @@ int RGWRados::add_bucket_to_reshard(const DoutPrefixProvider *dpp, const RGWBuck
 
   cls_rgw_reshard_entry entry;
   entry.time = real_clock::now();
-  entry.tenant = bucket_info.owner.tenant;
+  entry.tenant = bucket_info.bucket.tenant;
   entry.bucket_name = bucket_info.bucket.name;
   entry.bucket_id = bucket_info.bucket.bucket_id;
   entry.old_num_shards = num_source_shards;
@@ -10369,7 +10374,7 @@ int RGWRados::add_bucket_to_reshard(const DoutPrefixProvider *dpp, const RGWBuck
   return reshard.add(dpp, entry, y);
 }
 
-int RGWRados::check_quota(const DoutPrefixProvider *dpp, const rgw_user& bucket_owner, rgw_bucket& bucket,
+int RGWRados::check_quota(const DoutPrefixProvider *dpp, const rgw_owner& bucket_owner, rgw_bucket& bucket,
                           RGWQuota& quota,
 			  uint64_t obj_size, optional_yield y,
 			  bool check_size_only)
