@@ -6786,8 +6786,9 @@ int main(int argc, const char **argv)
         cerr << "failed to parse policy: " << e.what() << std::endl;
         return -EINVAL;
       }
+      std::string description; // empty
       std::unique_ptr<rgw::sal::RGWRole> role = driver->get_role(role_name, tenant, account_id, path,
-                                                                 assume_role_doc, max_session_duration);
+                                                                 assume_role_doc, description, max_session_duration);
       ret = role->create(dpp(), true, "", null_yield);
       if (ret < 0) {
         return -ret;
