@@ -33,12 +33,14 @@ def get_gateway_secure_connection(gateway, credentials):
 def get_gateway_iam_connection(gateway, credentials):
     """ connect to iam api of the given gateway """
     if gateway.iam_connection is None:
-        gateway.iam_connection = boto.connect_iam(
+        endpoint = f'http://{gateway.host}:{gateway.port}'
+        print(endpoint)
+        gateway.iam_connection = boto3.client(
+                service_name = 'iam',
                 aws_access_key_id = credentials.access_key,
                 aws_secret_access_key = credentials.secret,
-                host = gateway.host,
-                port = gateway.port,
-                is_secure = False)
+                endpoint_url = endpoint,
+                use_ssl = False)
     return gateway.iam_connection
 
 

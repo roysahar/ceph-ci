@@ -369,10 +369,11 @@ class Credentials:
         return ['--access-key', self.access_key, '--secret', self.secret]
 
 class User(SystemObject):
-    def __init__(self, uid, data = None, name = None, credentials = None, tenant = None):
+    def __init__(self, uid, data = None, name = None, credentials = None, tenant = None, account = None):
         self.name = name
         self.credentials = credentials or []
         self.tenant = tenant
+        self.account = account
         super(User, self).__init__(data, uid)
 
     def user_arg(self):
@@ -380,6 +381,8 @@ class User(SystemObject):
         args = ['--uid', self.id]
         if self.tenant:
             args += ['--tenant', self.tenant]
+        if self.account:
+            args += ['--account-id', self.account, '--account-root']
         return args
 
     def build_command(self, command):
