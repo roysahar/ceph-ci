@@ -1120,7 +1120,6 @@ int RGWPSCreateNotifOp::init_processing(optional_yield y)
     return ret;
   }
 
-  const RGWPubSub ps(driver, get_account_or_tenant(s->owner.id), *s->penv.site);
 
   for (const auto& c : configurations.list) {
     const auto& notif_name = c.id;
@@ -1151,6 +1150,7 @@ int RGWPSCreateNotifOp::init_processing(optional_yield y)
                                  std::forward_as_tuple());
     if (insert.second) {
       rgw_pubsub_topic& topic_info = insert.first->second;
+      const RGWPubSub ps(driver, arn->account, *s->penv.site);
       ret = ps.get_topic(this, topic_name, topic_info, y, nullptr);
       if (ret < 0) {
         ldpp_dout(this, 4) << "failed to get topic '" << topic_name << "', ret=" << ret << dendl;
@@ -1278,7 +1278,6 @@ void RGWPSCreateNotifOp::execute_v2(optional_yield y) {
         << s->bucket << ", ret = " << op_ret << dendl;
     return;
   }
-  const RGWPubSub ps(driver, get_account_or_tenant(s->owner.id), *s->penv.site);
   for (const auto& c : configurations.list) {
     const auto& notif_name = c.id;
 
