@@ -301,7 +301,7 @@ class RGWPSCreateTopicOp : public RGWOp {
       // account users don't consult the existing owner/policy
       if (!verify_user_permission(this, s, topic_arn,
                                   rgw::IAM::snsCreateTopic)) {
-        return -EACCES;
+        return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
       }
       return 0;
     }
@@ -311,7 +311,7 @@ class RGWPSCreateTopicOp : public RGWOp {
     }
     if (!verify_topic_permission(this, s, *existing, topic_arn,
                                  rgw::IAM::snsCreateTopic)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
     return 0;
   }
@@ -393,7 +393,7 @@ public:
     // check account permissions up front
     if (s->auth.identity->get_account() &&
         !verify_user_permission(this, s, {}, rgw::IAM::snsListTopics)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
 
     return 0;
@@ -514,7 +514,7 @@ class RGWPSGetTopicOp : public RGWOp {
   int verify_permission(optional_yield y) override {
     if (!verify_topic_permission(this, s, result, topic_arn,
                                  rgw::IAM::snsGetTopicAttributes)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
     return 0;
   }
@@ -600,7 +600,7 @@ class RGWPSGetTopicAttributesOp : public RGWOp {
   int verify_permission(optional_yield y) override {
     if (!verify_topic_permission(this, s, result, topic_arn,
                                  rgw::IAM::snsGetTopicAttributes)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
     return 0;
   }
@@ -770,7 +770,7 @@ class RGWPSSetTopicAttributesOp : public RGWOp {
   int verify_permission(optional_yield y) override {
     if (!verify_topic_permission(this, s, result, topic_arn,
                                  rgw::IAM::snsSetTopicAttributes)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
     return 0;
   }
@@ -893,7 +893,7 @@ class RGWPSDeleteTopicOp : public RGWOp {
   int verify_permission(optional_yield y) override {
     if (topic && !verify_topic_permission(this, s, *topic, topic_arn,
                                           rgw::IAM::snsDeleteTopic)) {
-      return -EACCES;
+      return -ERR_AUTHORIZATION; // AuthorizationError is sns for AccessDenied
     }
     return 0;
   }
