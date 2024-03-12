@@ -2,6 +2,7 @@
 // vim: ts=8 sw=2 smarttab ft=cpp
 
 #include "services/svc_zone.h"
+#include "rgw_account.h"
 #include "rgw_b64.h"
 #include "rgw_sal.h"
 #include "rgw_pubsub.h"
@@ -549,6 +550,12 @@ int RGWPubSub::get_topics(const DoutPrefixProvider* dpp,
     // v1 returns all topics, ignoring marker/max_items
     return read_topics_v1(dpp, result, nullptr, y);
   }
+
+  if (rgw::account::validate_id(tenant)) {
+    // if our tenant is an account, return the account listing
+    return list_account_topics(dpp, start_marker, max_items,
+                               result, next_marker, y);
+  }
  
   // TODO: prefix filter on 'tenant:'
   void* handle = NULL;
@@ -590,6 +597,36 @@ int RGWPubSub::get_topics(const DoutPrefixProvider* dpp,
     next_marker.clear();
   }
   return ret;
+}
+
+int RGWPubSub::list_account_topics(const DoutPrefixProvider* dpp,
+                                   const std::string& start_marker,
+                                   int max_items, rgw_pubsub_topics& result,
+                                   std::string& next_marker,
+                                   optional_yield y) const
+{
+  if (max_items > 1000) {
+    max_items = 1000;
+  }
+
+  rgw::sal::TopicList listing;
+  int ret = driver->list_account_topics(dpp, y, tenant, start_marker,
+                                        max_items, listing);
+  if (ret < 0) {
+    return ret;
+  }
+
+  for (const auto& topic_name : listing.topics) {
+    rgw_pubsub_topic topic;
+    int r = get_topic(dpp, topic_name, topic, y, nullptr);
+    if (r < 0) {
+      continue;
+    }
+    result.topics[topic_name] = std::move(topic);
+  }
+
+  next_marker = std::move(listing.next_marker);
+  return 0;
 }
 
 int RGWPubSub::read_topics_v1(const DoutPrefixProvider *dpp, rgw_pubsub_topics& result,

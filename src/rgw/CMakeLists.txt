@@ -205,6 +205,7 @@ set(librgw_common_srcs
   driver/rados/roles.cc
   driver/rados/sync_fairness.cc
   driver/rados/topic.cc
+  driver/rados/topics.cc
   driver/rados/users.cc)
 
 list(APPEND librgw_common_srcs
