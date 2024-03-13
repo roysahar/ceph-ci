@@ -383,7 +383,7 @@ def init(parse_args):
                     admin_user.create(zone, arg)
                     # create test account/user
                     cluster.admin(['account', 'create', '--account-id', user.account])
-                    arg = ['--display-name', '"Test User"']
+                    arg = ['--display-name', 'TestUser']
                     arg += user_creds.credential_args()
                     user.create(zone, arg)
                 else:
