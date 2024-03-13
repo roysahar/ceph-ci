@@ -13,10 +13,10 @@ This REST API is served by the same HTTP endpoint as the
 Authorization
 =============
 
-By default, only `Account Root Users`_ are authorized to use the IAM API,
-and can only see the resources under their own account. The account root
-user can use policies to delegate these permissions to other users or roles
-in the account.
+By default, only :ref:`Account Root Users <radosgw-account-root-user>` are
+authorized to use the IAM API, and can only see the resources under their own
+account. The account root user can use policies to delegate these permissions
+to other users or roles in the account.
 
 Feature Support
 ===============
@@ -186,4 +186,3 @@ AmazonS3ReadOnlyAccess
 
 .. _Amazon IAM API: https://docs.aws.amazon.com/IAM/latest/APIReference/welcome.html
 .. _Ceph Object Gateway S3 API: ../s3/
-.. _Account Root Users: radosgw-account-root-user
