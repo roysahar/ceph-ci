@@ -4,7 +4,7 @@
 
 .. versionadded:: Squid
 
-The Ceph Object Gateway supports user accounts as an optional feature to
+The Ceph Object Gateway supports *user accounts* as an optional feature to
 enable the self-service management of `Users`_, Groups and `Roles`_
 similar to those in `AWS Identity and Access Management`_ (IAM).
 
@@ -13,7 +13,7 @@ similar to those in `AWS Identity and Access Management`_ (IAM).
 Account Root User
 =================
 
-Each account is managed by an account root user. Like normal users and roles,
+Each account is managed by an *account root user*. Like normal users and roles,
 accounts and account root users must be created by an administrator using
 ``radosgw-admin`` or the `Admin Ops API`_.
 
@@ -168,8 +168,8 @@ Because account users have no permissions by default, some identity policy must
 be added to restore the user's original permissions.
 
 Alternatively, you may want to create a new account for each existing user. In
-that case, you probably want to add the ``--account-root`` option to make each
-user the root user of their account.
+that case, you may want to add the ``--account-root`` option to make each user
+the root user of their account.
 
 Account Root example
 --------------------
