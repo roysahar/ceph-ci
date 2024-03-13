@@ -13,14 +13,19 @@ similar to those in `AWS Identity and Access Management`_ (IAM).
 Account Root User
 =================
 
-Like normal users and roles, accounts and account root users must be
-created by an administrator using ``radosgw-admin`` or the `Admin Ops API`_.
+Each account is managed by an account root user. Like normal users and roles,
+accounts and account root users must be created by an administrator using
+``radosgw-admin`` or the `Admin Ops API`_.
 
 The account root user has superuser permissions on all resources owned
 by the account. The root user's credentials (access and secret keys) can be
 used with the `Ceph Object Gateway IAM API`_ to create additional IAM users
 and roles for use with the `Ceph Object Gateway S3 API`_, as well as to
 manage their associated access keys and policies.
+
+Account owners are encouraged to use this account root user for management
+only, and create users and roles with fine-grained permissions for specific
+applications.
 
 Resource Ownership
 ==================
