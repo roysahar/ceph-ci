@@ -363,6 +363,7 @@
      --policy-doc                  permission policy document
      --path-prefix                 path prefix for filtering roles
      --policy-arn                  ARN of a managed policy
+     --description                 Role description
   
   MFA options:
      --totp-serial                 a string that represents the ID of a TOTP token
