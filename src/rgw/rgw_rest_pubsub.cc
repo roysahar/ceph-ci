@@ -287,7 +287,7 @@ class RGWPSCreateTopicOp : public RGWOp {
     if (ret == -ENOENT) {
       // topic not present
     } else if (ret < 0) {
-      ldpp_dout(this, 1) << "failed to read topic '" << topic_name
+      ldpp_dout(this, 4) << "failed to read topic '" << topic_name
           << "', with error:" << ret << dendl;
       return ret;
     } else {
@@ -727,10 +727,8 @@ class RGWPSSetTopicAttributesOp : public RGWOp {
         replace_str(attribute_name, s->info.args.get("AttributeValue"));
         return 0;
       }
-      ldpp_dout(this, 4)
-          << "SetTopicAttribute Action 'AttributeName' argument is "
-             "invalid: 'AttributeName' = "
-          << attribute_name << dendl;
+      s->err.message = fmt::format("Invalid value for AttributeName '{}'",
+                                   attribute_name);
       return -EINVAL;
     }
     return 0;
