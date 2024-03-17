@@ -125,7 +125,9 @@ void TempURLEngine::get_owner_info(const DoutPrefixProvider* dpp, const req_stat
   }
 
   const rgw_user* uid = std::get_if<rgw_user>(&bucket->get_info().owner);
-  ceph_assert(uid); // TODO
+  if (!uid) {
+    throw -EPERM;
+  }
 
   ldpp_dout(dpp, 20) << "temp url user (bucket owner): " << bucket->get_info().owner
                  << dendl;
