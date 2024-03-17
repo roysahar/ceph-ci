@@ -512,6 +512,7 @@ public:
       stop_thread(&buckets_sync_thread);
     }
     stop_thread(&user_sync_thread);
+    stop_thread(&account_sync_thread);
   }
 };
 
