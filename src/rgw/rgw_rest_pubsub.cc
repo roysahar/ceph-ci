@@ -723,7 +723,7 @@ class RGWPSSetTopicAttributesOp : public RGWOp {
                                                : end_pos;
         push_endpoint_args.replace(pos, end_pos - pos, replaced_str);
       };
-      static constexpr std::initializer_list<std::string_view> args = {
+      static constexpr std::initializer_list<const char*> args = {
           "verify-ssl",    "use-ssl",         "ca-location", "amqp-ack-level",
           "amqp-exchange", "kafka-ack-level", "mechanism",   "cloudevents"};
       if (std::find(args.begin(), args.end(), attribute_name) != args.end()) {
