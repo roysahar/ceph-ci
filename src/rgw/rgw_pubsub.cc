@@ -545,16 +545,16 @@ int RGWPubSub::get_topics(const DoutPrefixProvider* dpp,
                           rgw_pubsub_topics& result, std::string& next_marker,
                           optional_yield y) const
 {
-  if (!use_notification_v2 || driver->stat_topics_v1(tenant, y, dpp) != -ENOENT) {
-    // in case of v1 or during migration we use v1 topics
-    // v1 returns all topics, ignoring marker/max_items
-    return read_topics_v1(dpp, result, nullptr, y);
-  }
-
   if (rgw::account::validate_id(tenant)) {
     // if our tenant is an account, return the account listing
     return list_account_topics(dpp, start_marker, max_items,
                                result, next_marker, y);
+  }
+
+  if (!use_notification_v2 || driver->stat_topics_v1(tenant, y, dpp) != -ENOENT) {
+    // in case of v1 or during migration we use v1 topics
+    // v1 returns all topics, ignoring marker/max_items
+    return read_topics_v1(dpp, result, nullptr, y);
   }
  
   // TODO: prefix filter on 'tenant:'
