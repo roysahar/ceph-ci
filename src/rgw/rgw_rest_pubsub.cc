@@ -309,7 +309,7 @@ class RGWPSCreateTopicOp : public RGWOp {
     } else {
       // if no topic policy exists, just check identity policies for denies
       // account users require an Allow, non-account users just check for Deny
-      const bool mandatory_policy = !!s->auth.identity->get_account();
+      const bool mandatory_policy{s->auth.identity->get_account()};
       if (!verify_user_permission(this, s, topic_arn,
                                   rgw::IAM::snsCreateTopic,
                                   mandatory_policy)) {
