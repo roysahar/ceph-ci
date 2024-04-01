@@ -331,6 +331,9 @@ class CloudZone(Zone):
         def list_notifications(self, bucket_name):
             assert False
 
+        def assume_role(self, role_arn, session_name, policy, duration_seconds):
+            assert False
+
     def get_conn(self, credentials):
         return self.Conn(self, credentials)
 

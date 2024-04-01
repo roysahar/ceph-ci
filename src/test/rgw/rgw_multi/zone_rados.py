@@ -170,6 +170,13 @@ class RadosZone(Zone):
               return out['TopicConfigurations']
             return []
 
+        def assume_role_create_bucket(self, bucket, role_arn, session_name, policy=None, duration_seconds=None):
+            response = self.sts_conn.assume_role(role_arn, session_name, policy, duration_seconds)
+            credentials = [response['credentials']['access_key'], response['credentials']['secret_key']]
+            self.get_temp_s3_connection(credentials, response['credentials']['session_token'])
+            self.temp_s3_client.create_bucket(bucket)
+            assert self.temp_s3_client.get_bucket(bucket)
+
     def get_conn(self, credentials):
         return self.Conn(self, credentials)
 

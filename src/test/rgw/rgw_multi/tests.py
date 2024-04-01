@@ -41,18 +41,24 @@ class Config:
 # implementations of these interfaces by calling init_multi()
 realm = None
 user = None
+alt_user = None
 config = None
-def init_multi(_realm, _user, _config=None):
+def init_multi(_realm, _user, _alt_user, _config=None):
     global realm
     realm = _realm
     global user
     user = _user
+    global alt_user
+    alt_user = _alt_user
     global config
     config = _config or Config()
     realm_meta_checkpoint(realm)
 
 def get_user():
     return user.id if user is not None else ''
+
+def get_alt_user():
+    return alt_user.id if alt_user is not None else ''
 
 def get_tenant():
     return config.tenant if config is not None and config.tenant is not None else ''
@@ -472,7 +478,8 @@ class ZonegroupConns:
         self.master_zone = None
 
         for z in zonegroup.zones:
-            zone_conn = z.get_conn(user.credentials)
+            credentials_list = [user.credentials, alt_user.credentials]
+            zone_conn = z.get_conn(credentials_list)
             self.zones.append(zone_conn)
             if z.is_read_only():
                 self.ro_zones.append(zone_conn)
@@ -545,7 +552,7 @@ def create_role_per_zone(zonegroup_conns, roles_per_zone = 1):
         for i in range(roles_per_zone):
             role_name = gen_role_name()
             log.info('create role zone=%s name=%s', zone.name, role_name)
-            policy_document = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam:::user/testuser\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+            policy_document = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam:::user/alt_tester\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
             role = zone.create_role("", role_name, policy_document, "")
             roles.append(role_name)
             zone_role.append((zone, role))
@@ -642,6 +649,9 @@ def check_bucket_eq(zone_conn1, zone_conn2, bucket):
 def check_role_eq(zone_conn1, zone_conn2, role):
     if zone_conn2.zone.has_roles():
         zone_conn2.check_role_eq(zone_conn1, role['create_role_response']['create_role_result']['role']['role_name'])
+
+def test_assume_role_bucket_create(zone_conn, bucket, role_arn, session_name):
+    zone_conn.assume_role_create_bucket(bucket, role_arn, session_name)
 
 def test_object_sync():
     zonegroup = realm.master_zonegroup()
@@ -1800,6 +1810,28 @@ def test_role_delete_sync():
         assert(not zone.has_role(role_name))
         log.info(f'success, zone: {zone.name} does not have role: {role_name}')
 
+
+def test_assume_role_after_sync():
+    zonegroup = realm.master_zonegroup()
+    zonegroup_conns = ZonegroupConns(zonegroup)
+    roles, zone_role = create_role_per_zone(zonegroup_conns)
+
+    zonegroup_meta_checkpoint(zonegroup)
+
+    for source_conn, role in zone_role:
+        for target_conn in zonegroup_conns.zones:
+            if source_conn.zone == target_conn.zone:
+                continue
+
+            check_role_eq(source_conn, target_conn, role)
+    
+    for source_conn, role in zone_role:
+        if source_conn.zone == zonegroup.master_zone:
+            bucket = "bucket1"
+            test_assume_role_bucket_create(bucket, source_conn, role['create_role_response']['create_role_result']['role']['role_arn'])
+        if source_conn.zone != zonegroup.master_zone:
+            bucket = "bucket2"
+            test_assume_role_bucket_create(bucket, source_conn, role['create_role_response']['create_role_result']['role']['role_arn'])
 
 @attr('data_sync_init')
 def test_bucket_full_sync_after_data_sync_init():

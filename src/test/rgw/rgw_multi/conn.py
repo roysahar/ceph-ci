@@ -1,6 +1,7 @@
 import boto
 import boto.s3.connection
 import boto.iam.connection
+import boto.sts.connection
 import boto3
 
 def get_gateway_connection(gateway, credentials):
@@ -41,6 +42,17 @@ def get_gateway_iam_connection(gateway, credentials):
                 is_secure = False)
     return gateway.iam_connection
 
+def get_gateway_sts_connection(gateway, credentials):
+    """ connect to sts api of the given gateway """
+    if gateway.sts_connection is None:
+        gateway.sts_connection = boto.connect_sts(
+                aws_access_key_id = credentials.access_key,
+                aws_secret_access_key = credentials.secret,
+                host = gateway.host,
+                port = gateway.port,
+                is_secure = False)
+    return gateway.sts_connection
+
 
 def get_gateway_s3_client(gateway, credentials, region):
   """ connect to boto3 s3 client api of the given gateway """
@@ -62,3 +74,13 @@ def get_gateway_sns_client(gateway, credentials, region):
                                         aws_secret_access_key=credentials.secret,
                                         region_name=region)
   return gateway.sns_client
+
+def get_gateway_temp_s3_client(gateway, credentials, session_token, region):
+  """ connect to boto3 s3 client api using temporary credntials """
+  gateway.temp_s3_client = boto3.client('s3',
+                        endpoint_url='http://' + gateway.host + ':' + str(gateway.port),
+                        aws_access_key_id=credentials.access_key,
+                        aws_secret_access_key=credentials.secret,
+                        aws_session_token = session_token,
+                        region_name=region)
+  return gateway.temp_s3_client
